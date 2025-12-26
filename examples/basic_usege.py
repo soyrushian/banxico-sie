@@ -1,20 +1,19 @@
 """
 Ejemplos básicos de uso del cliente banxico-sie
 
-Antes de ejecutar, asegúrate de:
-1. Tener un token de Banxico (https://www.banxico.org.mx/SieAPIRest/service/v1/)
-2. Instalar el paquete: pip install banxico-sie
-3. Configurar tu token en una variable de ambiente o directamente en el código
+Antes de ejecutar:
+1. Obtén tu token: https://www.banxico.org.mx/SieAPIRest/service/v1/
+2. Instala el paquete: pip install banxico-sie
+3. Configura tu token en variable de ambiente o en el código
 """
 
 import os
 from datetime import datetime, timedelta
-from banxico_sie import BanxicoSIEClient, Currency, RateType
+from banxico_sie import BanxicoSIEClient, Currency
 
 
 def main():
-    # Obtén tu token de la API de Banxico
-    # Lo ideal es usar variables de ambiente
+    # Obtén tu token de Banxico
     token = os.getenv("BANXICO_TOKEN", "tu_token_aqui")
     
     # Inicializa el cliente
@@ -24,85 +23,85 @@ def main():
     print("EJEMPLOS DE USO - BANXICO SIE")
     print("=" * 60)
     
-    # Ejemplo 1: USD con diferentes tipos
-    print("\n1. Tipos de cambio USD (FIX vs PAGOS):")
+    # Ejemplo 1: USD FIX vs USD PAGOS
+    print("\n1. USD - FIX vs Para liquidación:")
     try:
-        usd_fix = client.get_rate(Currency.USD, rate_type=RateType.FIX)
-        print(f"   USD FIX (Por determinación): ${usd_fix['valor']:.4f} MXN")
-        print(f"   - {usd_fix['tipo_descripcion']}")
-        print(f"   - Fecha: {usd_fix['fecha']}")
+        usd = client.get_rate(Currency.USD)
+        print(f"   USD (FIX): ${usd['valor']:.4f} MXN")
+        print(f"   - {usd['tipo']}")
+        print(f"   - Fecha: {usd['fecha']}")
         
-        usd_pagos = client.get_rate(Currency.USD, rate_type=RateType.PAGOS)
-        print(f"\n   USD PAGOS (Para liquidación): ${usd_pagos['valor']:.4f} MXN")
-        print(f"   - {usd_pagos['tipo_descripcion']}")
+        usd_pagos = client.get_rate(Currency.USD_PAGOS)
+        print(f"\n   USD (Liquidación): ${usd_pagos['valor']:.4f} MXN")
+        print(f"   - {usd_pagos['tipo']}")
         print(f"   - Fecha: {usd_pagos['fecha']}")
         
-        diferencia = abs(usd_fix['valor'] - usd_pagos['valor'])
-        print(f"\n   Diferencia: ${diferencia:.4f} MXN")
+        diff = abs(usd['valor'] - usd_pagos['valor'])
+        print(f"\n   Diferencia: ${diff:.4f} MXN")
     except Exception as e:
         print(f"   Error: {e}")
     
-    # Ejemplo 2: Otras monedas (solo FIX)
-    print("\n2. Otras monedas (solo tipo FIX disponible):")
-    monedas = [Currency.EUR, Currency.CAD, Currency.JPY]
+    # Ejemplo 2: Todas las monedas
+    print("\n2. Tipos de cambio actuales:")
+    monedas = [Currency.USD, Currency.USD_PAGOS, Currency.EUR, Currency.CAD, Currency.JPY]
     
+    print("   Moneda       | Valor      | Tipo")
+    print("   " + "-" * 50)
     for moneda in monedas:
         try:
             rate = client.get_rate(moneda)
-            print(f"   {rate['simbolo']} {rate['moneda']}: ${rate['valor']:.4f} MXN")
+            tipo_corto = "FIX" if "FIX" in rate['tipo'] else "Liquidación"
+            print(f"   {rate['simbolo']} {rate['moneda']:<10} | ${rate['valor']:>9.4f} | {tipo_corto}")
         except Exception as e:
             print(f"   {moneda.name}: Error - {e}")
     
-    # Ejemplo 3: Validación de tipo PAGOS
-    print("\n3. Validación: PAGOS solo funciona con USD")
+    # Ejemplo 3: Fecha específica
+    print("\n3. USD en fecha específica (1 dic 2024):")
     try:
-        # Esto lanzará un ValueError
-        eur_pagos = client.get_rate(Currency.EUR, rate_type=RateType.PAGOS)
-    except ValueError as e:
-        print(f"   ✓ Error esperado: {e}")
+        usd_hist = client.get_rate(Currency.USD, fecha="2024-12-01")
+        print(f"   USD FIX: ${usd_hist['valor']:.4f} MXN")
+        
+        usd_pagos_hist = client.get_rate(Currency.USD_PAGOS, fecha="2024-12-01")
+        print(f"   USD Liquidación: ${usd_pagos_hist['valor']:.4f} MXN")
     except Exception as e:
-        print(f"   Error inesperado: {e}")
+        print(f"   Error: {e}")
     
-    # Ejemplo 4: Histórico USD comparando tipos
-    print("\n4. Histórico USD última semana (FIX vs PAGOS):")
+    # Ejemplo 4: Histórico última semana
+    print("\n4. USD última semana (ambos tipos):")
     try:
         hoy = datetime.now()
         hace_semana = hoy - timedelta(days=7)
         
-        historico_fix = client.get_rates_range(
+        hist_fix = client.get_rates_range(
             Currency.USD,
             start_date=hace_semana,
-            end_date=hoy,
-            rate_type=RateType.FIX
+            end_date=hoy
         )
         
-        historico_pagos = client.get_rates_range(
-            Currency.USD,
+        hist_pagos = client.get_rates_range(
+            Currency.USD_PAGOS,
             start_date=hace_semana,
-            end_date=hoy,
-            rate_type=RateType.PAGOS
+            end_date=hoy
         )
         
-        print(f"   Registros FIX: {len(historico_fix)}")
-        print(f"   Registros PAGOS: {len(historico_pagos)}")
+        print(f"   Datos FIX: {len(hist_fix)} días")
+        print(f"   Datos Liquidación: {len(hist_pagos)} días")
         
-        print("\n   Últimos 3 días:")
-        print("   Fecha         | FIX      | PAGOS    | Dif")
-        print("   " + "-" * 48)
-        
-        for i in range(min(3, len(historico_fix), len(historico_pagos))):
-            fix_val = historico_fix[-(i+1)]['valor']
-            pagos_val = historico_pagos[-(i+1)]['valor']
-            diff = abs(fix_val - pagos_val)
-            fecha = historico_fix[-(i+1)]['fecha']
+        if hist_fix and hist_pagos:
+            print("\n   Últimos 3 días:")
+            print("   Fecha         | FIX      | Liquidación | Dif")
+            print("   " + "-" * 53)
             
-            print(f"   {fecha} | ${fix_val:.4f} | ${pagos_val:.4f} | ${diff:.4f}")
-            
+            for i in range(min(3, len(hist_fix), len(hist_pagos))):
+                fix = hist_fix[-(i+1)]
+                pagos = hist_pagos[-(i+1)]
+                diff = abs(fix['valor'] - pagos['valor'])
+                print(f"   {fix['fecha']} | ${fix['valor']:.4f} | ${pagos['valor']:.4f}      | ${diff:.4f}")
     except Exception as e:
         print(f"   Error: {e}")
     
-    # Ejemplo 5: Análisis USD FIX último mes
-    print("\n5. Análisis USD FIX último mes:")
+    # Ejemplo 5: Análisis estadístico USD FIX
+    print("\n5. Análisis estadístico USD FIX (último mes):")
     try:
         hoy = datetime.now()
         hace_mes = hoy - timedelta(days=30)
@@ -110,78 +109,110 @@ def main():
         historico = client.get_rates_range(
             Currency.USD,
             start_date=hace_mes,
-            end_date=hoy,
-            rate_type=RateType.FIX
+            end_date=hoy
         )
         
-        valores = [r['valor'] for r in historico if r['valor'] is not None]
+        valores = [r['valor'] for r in historico if r['valor']]
         
         if valores:
             minimo = min(valores)
             maximo = max(valores)
             promedio = sum(valores) / len(valores)
+            variacion_pct = ((maximo / minimo) - 1) * 100
             
+            print(f"   Datos: {len(valores)} registros")
             print(f"   Mínimo: ${minimo:.4f}")
             print(f"   Máximo: ${maximo:.4f}")
             print(f"   Promedio: ${promedio:.4f}")
-            print(f"   Variación: ${maximo - minimo:.4f} ({((maximo/minimo - 1) * 100):.2f}%)")
+            print(f"   Rango: ${maximo - minimo:.4f} ({variacion_pct:.2f}%)")
     except Exception as e:
         print(f"   Error: {e}")
     
-    # Ejemplo 6: Análisis USD PAGOS último mes
-    print("\n6. Análisis USD PAGOS último mes:")
+    # Ejemplo 6: Análisis estadístico USD PAGOS
+    print("\n6. Análisis estadístico USD Liquidación (último mes):")
     try:
         hoy = datetime.now()
         hace_mes = hoy - timedelta(days=30)
         
         historico = client.get_rates_range(
-            Currency.USD,
+            Currency.USD_PAGOS,
             start_date=hace_mes,
-            end_date=hoy,
-            rate_type=RateType.PAGOS
+            end_date=hoy
         )
         
-        valores = [r['valor'] for r in historico if r['valor'] is not None]
+        valores = [r['valor'] for r in historico if r['valor']]
         
         if valores:
             minimo = min(valores)
             maximo = max(valores)
             promedio = sum(valores) / len(valores)
+            variacion_pct = ((maximo / minimo) - 1) * 100
             
+            print(f"   Datos: {len(valores)} registros")
             print(f"   Mínimo: ${minimo:.4f}")
             print(f"   Máximo: ${maximo:.4f}")
             print(f"   Promedio: ${promedio:.4f}")
-            print(f"   Variación: ${maximo - minimo:.4f} ({((maximo/minimo - 1) * 100):.2f}%)")
+            print(f"   Rango: ${maximo - minimo:.4f} ({variacion_pct:.2f}%)")
     except Exception as e:
         print(f"   Error: {e}")
     
-    # Ejemplo 7: Comparación todas las monedas (FIX)
-    print("\n7. Tabla comparativa - Todas las monedas (tipo FIX):")
+    # Ejemplo 7: Comparativa internacional
+    print("\n7. Tabla comparativa internacional:")
     try:
-        print("   Moneda    | Valor MXN  | Símbolo | Tipo")
+        print("   Moneda       | MXN        | Tipo")
         print("   " + "-" * 50)
         
-        for moneda in [Currency.USD, Currency.EUR, Currency.CAD, Currency.JPY]:
-            rate = client.get_rate(moneda, rate_type=RateType.FIX)
-            print(f"   {moneda.name:<8} | ${rate['valor']:>9.4f} | {rate['simbolo']:<7} | FIX")
+        # Dólares
+        usd = client.get_rate(Currency.USD)
+        print(f"   {usd['simbolo']} USD (FIX)  | ${usd['valor']:>9.4f} | FIX")
+        
+        usd_p = client.get_rate(Currency.USD_PAGOS)
+        print(f"   {usd_p['simbolo']} USD (Liq) | ${usd_p['valor']:>9.4f} | Liquidación")
+        
+        # Otras monedas
+        cad = client.get_rate(Currency.CAD)
+        print(f"   {cad['simbolo']} CAD       | ${cad['valor']:>9.4f} | FIX")
+        
+        eur = client.get_rate(Currency.EUR)
+        print(f"   {eur['simbolo']} EUR       | ${eur['valor']:>9.4f} | FIX")
+        
+        jpy = client.get_rate(Currency.JPY)
+        print(f"   {jpy['simbolo']} JPY       | ${jpy['valor']:>9.4f} | FIX")
+        
     except Exception as e:
         print(f"   Error: {e}")
     
-    # Ejemplo 8: get_latest con ambos tipos
-    print("\n8. Último tipo de cambio disponible:")
+    # Ejemplo 8: get_latest
+    print("\n8. Últimos tipos de cambio disponibles:")
     try:
-        latest_fix = client.get_latest(Currency.USD, rate_type=RateType.FIX)
-        latest_pagos = client.get_latest(Currency.USD, rate_type=RateType.PAGOS)
+        latest_usd = client.get_latest(Currency.USD)
+        latest_pagos = client.get_latest(Currency.USD_PAGOS)
         
-        print(f"   USD FIX: ${latest_fix['valor']:.4f} ({latest_fix['fecha']})")
-        print(f"   USD PAGOS: ${latest_pagos['valor']:.4f} ({latest_pagos['fecha']})")
+        print(f"   USD FIX: ${latest_usd['valor']:.4f} ({latest_usd['fecha']})")
+        print(f"   USD Liquidación: ${latest_pagos['valor']:.4f} ({latest_pagos['fecha']})")
+    except Exception as e:
+        print(f"   Error: {e}")
+    
+    # Ejemplo 9: Conversión práctica
+    print("\n9. Ejemplo de conversión:")
+    try:
+        mxn_cantidad = 10000  # 10,000 pesos
+        
+        usd = client.get_rate(Currency.USD)
+        usd_pagos = client.get_rate(Currency.USD_PAGOS)
+        
+        usd_fix_convertido = mxn_cantidad / usd['valor']
+        usd_pagos_convertido = mxn_cantidad / usd_pagos['valor']
+        
+        print(f"   ${mxn_cantidad:,.2f} MXN equivalen a:")
+        print(f"   - ${usd_fix_convertido:,.2f} USD (tipo FIX)")
+        print(f"   - ${usd_pagos_convertido:,.2f} USD (tipo Liquidación)")
+        print(f"   - Diferencia: ${abs(usd_fix_convertido - usd_pagos_convertido):.2f} USD")
     except Exception as e:
         print(f"   Error: {e}")
     
     print("\n" + "=" * 60)
     print("Ejemplos completados!")
-    print("\nNOTA: Solo USD soporta tipo PAGOS.")
-    print("      Otras monedas solo tienen tipo FIX.")
     print("=" * 60)
 
 
