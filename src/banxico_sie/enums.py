@@ -1,49 +1,42 @@
-"""Enumeraciones para tipos de cambio y monedas soportadas por Banxico SIE"""
-
 from enum import Enum
-
 
 class Currency(Enum):
     """
-    Monedas soportadas por el SIE de Banxico
-    
-    Cada moneda tiene asociada su serie de Banxico
+    Monedas soportadas por el SIE de Banxico.
+    Formato de definición: (ID_SERIE, NOMBRE, SIMBOLO, DESCRIPCION_TIPO)
     """
-    USD = "SF43718"  # Dólar estadounidense (FIX)
-    USD_PAGOS = "SF60653"  # Dólar estadounidense (Para liquidación)
-    CAD = "SF60632"  # Dólar canadiense  
-    EUR = "SF46410"  # Euro
-    JPY = "SF46406"  # Yen japonés
-    
+    # Single Source of Truth
+    USD = ("SF43718", "Dólar estadounidense", "$",  "FIX - Determinación publicada en DOF")
+    USD_SPOT = ("SF60653", "Dólar estadounidense", "$",  "Para liquidación (obligaciones)")
+    CAD = ("SF60632", "Dólar canadiense",     "C$", "Cotización Cruzada")
+    EUR = ("SF46410", "Euro",                 "€",  "Cotización Cruzada")
+    JPY = ("SF46406", "Yen japonés",          "¥",  "Cotización Cruzada")
+
+    def __new__(cls, series_id, name_es, symbol, tipo_desc):
+        """
+        Constructor que distribuye la tupla a las propiedades.
+        El primer valor (series_id) se convierte automáticamente en el .value
+        """
+        obj = object.__new__(cls)
+        obj._value_ = series_id  # El valor nativo del Enum será el ID de Banxico
+        
+        # Asignación a atributos internos (protected)
+        obj._name_es = name_es
+        obj._symbol = symbol
+        obj._tipo = tipo_desc
+        return obj
+
     @property
     def name_es(self) -> str:
         """Retorna el nombre en español de la moneda"""
-        names = {
-            "USD": "Dólar estadounidense",
-            "USD_PAGOS": "Dólar estadounidense",
-            "CAD": "Dólar canadiense",
-            "EUR": "Euro",
-            "JPY": "Yen japonés"
-        }
-        return names[self.name]
-    
+        return self._name_es
+
     @property
     def symbol(self) -> str:
         """Retorna el símbolo de la moneda"""
-        symbols = {
-            "USD": "$",
-            "USD_PAGOS": "$",
-            "CAD": "C$",
-            "EUR": "€",
-            "JPY": "¥"
-        }
-        return symbols[self.name]
-    
+        return self._symbol
+
     @property
     def tipo(self) -> str:
         """Retorna el tipo de cambio de la serie"""
-        if self == Currency.USD_PAGOS:
-            return "Para liquidación (obligaciones)"
-        return "FIX - Determinación publicada en DOF"
-
-
+        return self._tipo
