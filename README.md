@@ -183,9 +183,10 @@ Este paquete no está afiliado con el Banco de México. Usa los datos bajo tu pr
 ## 🔗 Links útiles
 
 - [API de Banxico SIE](https://www.banxico.org.mx/SieAPIRest/service/v1/)
-- [Documentación oficial](https://www.banxico.org.mx/SieAPIRest/service/v1/doc/consultaDatos)
+- [Documentación oficial](https://www.banxico.org.mx/SieAPIRest/service/swagger-ui.html#/Series)
 - [Catálogo de series](https://www.banxico.org.mx/SieAPIRest/service/v1/doc/catalogoSeries)
 
 ## 📮 Contacto
+
 
 Issues: https://github.com/soyrushian/banxico-sie/issues
