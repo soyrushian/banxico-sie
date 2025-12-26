@@ -36,17 +36,17 @@ client = BanxicoSIEClient("tu_token_aqui")
 
 ```python
 # USD FIX (por determinación)
-usd = client.get_rate(Currency.USD)
+usd = client.get_rate(Currency.USD) # Dólar (FIX - Determinación DOF)
 print(f"USD: ${usd['valor']} MXN")
 
-# USD para liquidación
-usd_pagos = client.get_rate(Currency.USD_PAGOS)
-print(f"USD PAGOS: ${usd_pagos['valor']} MXN")
+# USD Spot (para liquidación)
+usd_spot = client.get_rate(Currency.USD_SPOT) # Dólar (Para liquidación)
+print(f"USD SPOT: ${usd_spot['valor']} MXN")
 
 # Otras monedas
-eur = client.get_rate(Currency.EUR)
-cad = client.get_rate(Currency.CAD)
-jpy = client.get_rate(Currency.JPY)
+eur = client.get_rate(Currency.EUR) # Euro
+cad = client.get_rate(Currency.CAD) # Dolar canadiense
+gbp = client.get_rate(Currency.GBP) # Libra Esterlina
 ```
 
 ### Consultar fecha específica
@@ -98,11 +98,12 @@ print(f"Último USD PAGOS: ${latest_pagos['valor']} ({latest_pagos['fecha']})")
 ## 🌍 Monedas disponibles
 
 ```python
-Currency.USD        # 🇺🇸 Dólar (FIX - Determinación DOF)
-Currency.USD_PAGOS  # 🇺🇸 Dólar (Para liquidación)
-Currency.EUR        # 🇪🇺 Euro
-Currency.CAD        # 🇨🇦 Dólar canadiense
-Currency.JPY        # 🇯🇵 Yen japonés
+Currency.USD # 🇺🇸 Dólar (FIX - Determinación DOF)
+Currency.USD_SPOT # 🇺🇸 Dólar (Para liquidación)
+Currency.CAD # 🇨🇦 Dólar canadiense (Cotización Cruzada)
+Currency.EUR # 🇪🇺 Euro (Cotización Cruzada)
+Currency.JPY # 🇯🇵 Yen japonés (Cotización Cruzada)
+Currency.GBP # 🇬🇧 Libra Esterlina (Cotización Cruzada)
 ```
 
 ## 📦 Estructura de respuesta
@@ -118,7 +119,7 @@ Currency.JPY        # 🇯🇵 Yen japonés
 }
 ```
 
-Para `Currency.USD_PAGOS`:
+Para `Currency.USD_SPOT`:
 ```python
 {
     'fecha': '26/12/2024',
@@ -132,25 +133,26 @@ Para `Currency.USD_PAGOS`:
 
 ## 📋 Series de Banxico
 
-| Currency | Serie | Tipo |
-|----------|-------|------|
-| `Currency.USD` | SF60652 | FIX - Determinación publicada en DOF |
-| `Currency.USD_PAGOS` | SF60653 | Para liquidación de obligaciones |
-| `Currency.EUR` | SF46410 | FIX |
-| `Currency.CAD` | SF43687 | FIX |
-| `Currency.JPY` | SF46406 | FIX |
+| Currency | Serie | Símbolo | Tipo |
+|----------|-------|---------|------|
+| `Currency.USD` | SF43718 | $ | FIX - Determinación publicada en DOF |
+| `Currency.USD_SPOT` | SF60653 | $ | Para liquidación (obligaciones) |
+| `Currency.CAD` | SF60632 | C$ | Cotización Cruzada |
+| `Currency.EUR` | SF46410 | € | Cotización Cruzada |
+| `Currency.JPY` | SF46406 | ¥ | Cotización Cruzada |
+| `Currency.GBP` | SF46407 | £ | Cotización Cruzada |
 
 ## 🔥 Ejemplos prácticos
 
-### Comparar USD FIX vs PAGOS
+### Comparar USD FIX vs SPOT
 
 ```python
 usd_fix = client.get_rate(Currency.USD)
-usd_pagos = client.get_rate(Currency.USD_PAGOS)
+usd_spot = client.get_rate(Currency.USD_SPOT)
 
 print(f"USD FIX: ${usd_fix['valor']:.4f}")
-print(f"USD PAGOS: ${usd_pagos['valor']:.4f}")
-print(f"Diferencia: ${abs(usd_fix['valor'] - usd_pagos['valor']):.4f}")
+print(f"USD SPOT: ${usd_spot['valor']:.4f}")
+print(f"Diferencia: ${abs(usd_fix['valor'] - usd_spot['valor']):.4f}")
 ```
 
 ### Histórico con análisis
@@ -160,9 +162,9 @@ from datetime import datetime, timedelta
 
 hace_mes = datetime.now() - timedelta(days=30)
 historico = client.get_rates_range(
-    Currency.USD,
-    start_date=hace_mes,
-    end_date=datetime.now()
+Currency.USD,
+start_date=hace_mes,
+end_date=datetime.now()
 )
 
 valores = [r['valor'] for r in historico if r['valor']]
@@ -174,37 +176,18 @@ print(f"Promedio: ${sum(valores)/len(valores):.4f}")
 ### Tabla de todas las monedas
 
 ```python
-monedas = [Currency.USD, Currency.USD_PAGOS, Currency.EUR, Currency.CAD, Currency.JPY]
+monedas = [
+Currency.USD,
+Currency.USD_SPOT,
+Currency.EUR,
+Currency.CAD,
+Currency.JPY,
+Currency.GBP
+]
 
 for moneda in monedas:
-    rate = client.get_rate(moneda)
-    print(f"{rate['simbolo']} {rate['moneda']}: ${rate['valor']:.4f} MXN")
-```
-
-## 🛠️ Desarrollo
-
-### Instalar dependencias de desarrollo
-
-```bash
-pip install -e ".[dev]"
-```
-
-### Correr tests
-
-```bash
-pytest
-```
-
-### Formatear código
-
-```bash
-black src/ tests/
-```
-
-### Linter
-
-```bash
-flake8 src/ tests/
+rate = client.get_rate(moneda)
+print(f"{rate['simbolo']} {rate['moneda']}: ${rate['valor']:.4f} MXN")
 ```
 
 ## 📝 Licencia
@@ -228,3 +211,4 @@ Este paquete no está afiliado con el Banco de México. Usa los datos bajo tu pr
 ## 📮 Contacto
 
 Issues: https://github.com/soyrushian/banxico-sie/issues
+
