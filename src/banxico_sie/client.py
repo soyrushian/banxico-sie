@@ -132,12 +132,20 @@ class BanxicoSIEClient:
             
             results = []
             for item in series_data:
+                # Manejar valores N/E (No Existe) u otros no numéricos
+                valor = None
+                if item["dato"]:
+                    try:
+                        valor = float(item["dato"])
+                    except (ValueError, TypeError):
+                        valor = None
+                
                 results.append({
                     "fecha": item["fecha"],
                     "moneda": currency.name.replace("_PAGOS", ""),
                     "moneda_nombre": currency.name_es,
                     "simbolo": currency.symbol,
-                    "valor": float(item["dato"]) if item["dato"] else None,
+                    "valor": valor,
                     "tipo": currency.tipo
                 })
             
