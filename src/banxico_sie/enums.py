@@ -9,9 +9,9 @@ class Currency(Enum):
     
     Cada moneda tiene asociada su serie de Banxico
     """
-    USD = "SF60652"  # Dólar estadounidense (FIX)
+    USD = "SF43718"  # Dólar estadounidense (FIX)
     USD_PAGOS = "SF60653"  # Dólar estadounidense (Para liquidación)
-    CAD = "SF43687"  # Dólar canadiense  
+    CAD = "SF60632"  # Dólar canadiense  
     EUR = "SF46410"  # Euro
     JPY = "SF46406"  # Yen japonés
     
