@@ -142,7 +142,7 @@ class BanxicoSIEClient:
                 
                 results.append({
                     "fecha": item["fecha"],
-                    "moneda": currency.name.replace("_PAGOS", ""),
+                    "moneda": currency.name.replace("_SPOT", ""),
                     "moneda_nombre": currency.name_es,
                     "simbolo": currency.symbol,
                     "valor": valor,
@@ -274,3 +274,4 @@ class BanxicoSIEClient:
             >>> print(f"Último USD PAGOS: ${latest['valor']} ({latest['fecha']})")
         """
         return self.get_rate(currency)
+
