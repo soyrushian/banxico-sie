@@ -11,6 +11,7 @@ class Currency(Enum):
     CAD = ("SF60632", "Dólar canadiense",     "C$", "Cotización Cruzada")
     EUR = ("SF46410", "Euro",                 "€",  "Cotización Cruzada")
     JPY = ("SF46406", "Yen japonés",          "¥",  "Cotización Cruzada")
+    GBP = ("SF46407", "Libra Esterlina",      "£",  "Cotización cruzada")
 
     def __new__(cls, series_id, name_es, symbol, tipo_desc):
         """
@@ -40,3 +41,4 @@ class Currency(Enum):
     def tipo(self) -> str:
         """Retorna el tipo de cambio de la serie"""
         return self._tipo
+
