@@ -11,7 +11,7 @@ class Currency(Enum):
     """
     USD = "SF43718"  # Dólar estadounidense (FIX)
     USD_PAGOS = "SF60653"  # Dólar estadounidense (Para liquidación)
-    CAD = "SF60632"  # Dólar canadiense  
+    CAD = "SF57770"  # Dólar canadiense  
     EUR = "SF46410"  # Euro
     JPY = "SF46406"  # Yen japonés
     
@@ -45,3 +45,4 @@ class Currency(Enum):
         if self == Currency.USD_PAGOS:
             return "Para liquidación (obligaciones)"
         return "FIX - Determinación publicada en DOF"
+
